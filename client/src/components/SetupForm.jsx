@@ -49,44 +49,71 @@ export default function SetupForm({ onStart, loading }) {
 
   return (
     <form className="setup-form" onSubmit={handleSubmit}>
-      <h1>InterviewGPT</h1>
-      <p className="subtitle">Configure your mock interview</p>
+      <div className="landing-hero">
+        <div>
+          <h1>InterviewGPT</h1>
+          <p className="subtitle">Configure your mock interview with dynamic AI prompts, voice support, and instant feedback.</p>
+          <div className="feature-chips">
+            <span>AI interviewer</span>
+            <span>Voice-ready answers</span>
+            <span>Config preview</span>
+          </div>
+        </div>
 
-      <label>
-        Role
-        <select value={role} onChange={(e) => setRole(e.target.value)}>
-          {ROLES.map((r) => (
-            <option key={r} value={r}>{r}</option>
-          ))}
-        </select>
-      </label>
+        <div className="preview-card">
+          <div className="preview-label">Live preview</div>
+          <div className="preview-item">
+            <strong>Role:</strong> {role}
+          </div>
+          <div className="preview-item">
+            <strong>Experience:</strong> {experience}
+          </div>
+          <div className="preview-item">
+            <strong>Difficulty:</strong> {difficulty}
+          </div>
+          <div className="preview-item">
+            <strong>Type:</strong> {type}
+          </div>
+        </div>
+      </div>
 
-      <label>
-        Experience
-        <select value={experience} onChange={(e) => setExperience(e.target.value)}>
-          {EXPERIENCES.map((x) => (
-            <option key={x} value={x}>{x}</option>
-          ))}
-        </select>
-      </label>
+      <div className="setup-grid">
+        <label>
+          Role
+          <select value={role} onChange={(e) => setRole(e.target.value)}>
+            {ROLES.map((r) => (
+              <option key={r} value={r}>{r}</option>
+            ))}
+          </select>
+        </label>
 
-      <label>
-        Difficulty
-        <select value={difficulty} onChange={(e) => setDifficulty(e.target.value)}>
-          {DIFFICULTIES.map((d) => (
-            <option key={d} value={d}>{d}</option>
-          ))}
-        </select>
-      </label>
+        <label>
+          Experience
+          <select value={experience} onChange={(e) => setExperience(e.target.value)}>
+            {EXPERIENCES.map((x) => (
+              <option key={x} value={x}>{x}</option>
+            ))}
+          </select>
+        </label>
 
-      <label>
-        Interview Type
-        <select value={type} onChange={(e) => setType(e.target.value)}>
-          {TYPES.map((t) => (
-            <option key={t} value={t}>{t}</option>
-          ))}
-        </select>
-      </label>
+        <label>
+          Difficulty
+          <select value={difficulty} onChange={(e) => setDifficulty(e.target.value)}>
+            {DIFFICULTIES.map((d) => (
+              <option key={d} value={d}>{d}</option>
+            ))}
+          </select>
+        </label>
+
+        <label>
+          Interview Type
+          <select value={type} onChange={(e) => setType(e.target.value)}>
+            {TYPES.map((t) => (
+              <option key={t} value={t}>{t}</option>
+            ))}
+          </select>
+        </label>
+      </div>
 
       <label>
         Resume (paste text, optional)
@@ -98,9 +125,14 @@ export default function SetupForm({ onStart, loading }) {
         />
       </label>
 
-      <button type="submit" disabled={loading}>
-        {loading ? "Starting..." : "Start Interview"}
-      </button>
+      <div className="form-footer">
+        <div className="hint-box">
+          <strong>Tip:</strong> Use the preview card to review your interview setup before you start.
+        </div>
+        <button type="submit" disabled={loading}>
+          {loading ? "Starting..." : "Start Interview"}
+        </button>
+      </div>
     </form>
   );
 }

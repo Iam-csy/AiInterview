@@ -8,11 +8,26 @@ export default function InterviewChat({ sessionId, initialMessage, onEnd }) {
   const [messages, setMessages] = useState([{ role: "assistant", content: initialMessage }]);
   const [loading, setLoading] = useState(false);
   const [ending, setEnding] = useState(false);
+  const [voiceEnabled, setVoiceEnabled] = useState(true);
   const bottomRef = useRef(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
+
+  useEffect(() => {
+    const latestMessage = messages[messages.length - 1];
+    if (!latestMessage || latestMessage.role !== "assistant") return;
+
+    if (typeof window !== "undefined" && window.speechSynthesis && voiceEnabled) {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(latestMessage.content);
+      utterance.lang = "en-US";
+      utterance.rate = 1;
+      utterance.pitch = 1;
+      window.speechSynthesis.speak(utterance);
+    }
+  }, [messages, voiceEnabled]);
 
   const appendMessage = (role, content) => {
     setMessages((prev) => [...prev, { role, content }]);
@@ -52,9 +67,18 @@ export default function InterviewChat({ sessionId, initialMessage, onEnd }) {
     <div className="interview-chat">
       <div className="chat-header">
         <span>Live Interview</span>
-        <button className="end-btn" onClick={handleEndInterview} disabled={ending}>
-          {ending ? "Ending..." : "End Interview"}
-        </button>
+        <div className="chat-controls">
+          <button
+            className="voice-toggle-btn"
+            type="button"
+            onClick={() => setVoiceEnabled((value) => !value)}
+          >
+            {voiceEnabled ? "AI Voice On" : "AI Voice Off"}
+          </button>
+          <button className="end-btn" onClick={handleEndInterview} disabled={ending}>
+            {ending ? "Ending..." : "End Interview"}
+          </button>
+        </div>
       </div>
 
       <div className="chat-window">
