@@ -4,12 +4,11 @@ const interviewRoutes = require("./routes/interviewRoutes");
 const apiLimiter = require("./middleware/rateLimiter");
 
 const app = express();
+const corsOptions = {
+  origin: process.env.CLIENT_ORIGIN || "http://localhost:5173",
+};
 
-app.use(
-  cors({
-    origin: process.env.CLIENT_ORIGIN || "http://localhost:5173",
-  })
-);
+app.use(cors(corsOptions));
 app.use(express.json({ limit: "2mb" }));
 
 app.get("/health", (req, res) => {

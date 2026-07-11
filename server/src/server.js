@@ -1,7 +1,7 @@
 require("dotenv").config();
 const app = require("./app");
 
-function startServer(port = Number(process.env.PORT || 5000), attempts = 0) {
+const startServer = async (port = Number(process.env.PORT || 5000), attempts = 0) => {
   const server = app.listen(port, () => {
     console.log(`InterviewGPT server running on http://localhost:${port}`);
   });
@@ -16,6 +16,9 @@ function startServer(port = Number(process.env.PORT || 5000), attempts = 0) {
       process.exit(1);
     }
   });
-}
+};
 
-startServer();
+startServer().catch((err) => {
+  console.error("Failed to start server:", err);
+  process.exit(1);
+});

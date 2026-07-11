@@ -5,9 +5,7 @@ import AnswerInput from "./AnswerInput.jsx";
 import { sendMessage, endInterview } from "../utils/api.js";
 
 export default function InterviewChat({ sessionId, initialMessage, onEnd }) {
-  const [messages, setMessages] = useState([
-    { role: "assistant", content: initialMessage },
-  ]);
+  const [messages, setMessages] = useState([{ role: "assistant", content: initialMessage }]);
   const [loading, setLoading] = useState(false);
   const [ending, setEnding] = useState(false);
   const bottomRef = useRef(null);
@@ -16,17 +14,22 @@ export default function InterviewChat({ sessionId, initialMessage, onEnd }) {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
 
+  const appendMessage = (role, content) => {
+    setMessages((prev) => [...prev, { role, content }]);
+  };
+
   async function handleSend(text) {
-    setMessages((prev) => [...prev, { role: "user", content: text }]);
+    const trimmedText = text?.trim();
+    if (!trimmedText) return;
+
+    appendMessage("user", trimmedText);
     setLoading(true);
+
     try {
-      const { message } = await sendMessage(sessionId, text);
-      setMessages((prev) => [...prev, { role: "assistant", content: message }]);
-    } catch (err) {
-      setMessages((prev) => [
-        ...prev,
-        { role: "assistant", content: "Sorry, something went wrong. Please try again." },
-      ]);
+      const { message } = await sendMessage(sessionId, trimmedText);
+      appendMessage("assistant", message);
+    } catch (error) {
+      appendMessage("assistant", "Sorry, something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -34,14 +37,12 @@ export default function InterviewChat({ sessionId, initialMessage, onEnd }) {
 
   async function handleEndInterview() {
     setEnding(true);
+
     try {
       const { message } = await endInterview(sessionId);
       onEnd(message);
-    } catch (err) {
-      setMessages((prev) => [
-        ...prev,
-        { role: "assistant", content: "Couldn't generate final feedback. Please try again." },
-      ]);
+    } catch (error) {
+      appendMessage("assistant", "Couldn't generate final feedback. Please try again.");
     } finally {
       setEnding(false);
     }
