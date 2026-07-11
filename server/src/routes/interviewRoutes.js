@@ -1,13 +1,10 @@
-const express = require("express");
+import express from "express";
+import { startInterview, sendMessage, endInterview } from "../controllers/interviewController.js";
+
 const router = express.Router();
-const {
-  startInterview,
-  sendMessage,
-  endInterview,
-} = require("../controllers/interviewController");
 
 router.post("/start", startInterview);
 router.post("/message", sendMessage);
 router.post("/end", endInterview);
 
-module.exports = router;
+export default router;

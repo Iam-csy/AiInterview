@@ -1,4 +1,4 @@
-const rateLimit = require("express-rate-limit");
+import rateLimit from "express-rate-limit";
 
 const apiLimiter = rateLimit({
   windowMs: 60 * 1000, // 1 minute
@@ -8,4 +8,4 @@ const apiLimiter = rateLimit({
   message: { error: "Too many requests. Please slow down." },
 });
 
-module.exports = apiLimiter;
+export default apiLimiter;

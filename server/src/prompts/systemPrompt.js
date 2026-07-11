@@ -177,4 +177,4 @@ ${resume ? resume : "No resume provided."}
 Follow all rules in your system instructions. Begin (or continue) the interview accordingly.`;
 }
 
-module.exports = { SYSTEM_PROMPT, buildContextBlock };
+export { SYSTEM_PROMPT, buildContextBlock };

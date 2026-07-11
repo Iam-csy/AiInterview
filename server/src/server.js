@@ -1,5 +1,5 @@
-require("dotenv").config();
-const app = require("./app");
+import "dotenv/config";
+import app from "./app.js";
 
 const startServer = async (port = Number(process.env.PORT || 5000), attempts = 0) => {
   const server = app.listen(port, () => {

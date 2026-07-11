@@ -1,4 +1,4 @@
-const { getInterviewerReply } = require("../services/claudeService");
+import { getInterviewerReply } from "../services/claudeService.js";
 
 const startInterview = async (req, res) => {
   try {
@@ -53,4 +53,4 @@ const endInterview = async (req, res) => {
   }
 };
 
-module.exports = { startInterview, sendMessage, endInterview };
+export { startInterview, sendMessage, endInterview };

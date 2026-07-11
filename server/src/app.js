@@ -1,7 +1,7 @@
-const express = require("express");
-const cors = require("cors");
-const interviewRoutes = require("./routes/interviewRoutes");
-const apiLimiter = require("./middleware/rateLimiter");
+import express from "express";
+import cors from "cors";
+import interviewRoutes from "./routes/interviewRoutes.js";
+import apiLimiter from "./middleware/rateLimiter.js";
 
 const app = express();
 const corsOptions = {
@@ -23,4 +23,4 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: "Internal server error." });
 });
 
-module.exports = app;
+export default app;

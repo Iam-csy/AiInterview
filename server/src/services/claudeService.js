@@ -1,5 +1,5 @@
-const OpenAI = require("openai");
-const { SYSTEM_PROMPT, buildContextBlock } = require("../prompts/systemPrompt");
+import OpenAI from "openai";
+import { SYSTEM_PROMPT, buildContextBlock } from "../prompts/systemPrompt.js";
 
 const MODEL = process.env.OPENAI_MODEL || "gpt-4.1-mini";
 const apiKey = process.env.OPENAI_API_KEY?.trim();
@@ -52,4 +52,4 @@ const getInterviewerReply = async ({ config = {}, history = [], message = "" }) 
   }
 };
 
-module.exports = { getInterviewerReply, MODEL };
+export { getInterviewerReply, MODEL };
