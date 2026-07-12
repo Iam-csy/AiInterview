@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import interviewRoutes from "./routes/interviewRoutes.js";
+import authRoutes from "./routes/authRoutes.js";
 import apiLimiter from "./middleware/rateLimiter.js";
 
 const app = express();
@@ -16,6 +17,7 @@ app.get("/health", (req, res) => {
   res.json({ status: "ok" });
 });
 
+app.use("/api/auth", authRoutes);
 app.use("/api/interview", apiLimiter, interviewRoutes);
 
 // Fallback error handler

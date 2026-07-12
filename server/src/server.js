@@ -1,7 +1,10 @@
 import "dotenv/config";
 import app from "./app.js";
+import { connectDB } from "./config/database.js";
 
 const startServer = async (port = Number(process.env.PORT || 5000), attempts = 0) => {
+  await connectDB();
+
   const server = app.listen(port, () => {
     console.log(`InterviewGPT server running on http://localhost:${port}`);
   });

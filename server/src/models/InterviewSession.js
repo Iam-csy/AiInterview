@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
 const interviewSessionSchema = new mongoose.Schema(
   {
@@ -6,6 +6,11 @@ const interviewSessionSchema = new mongoose.Schema(
       type: String,
       required: true,
       unique: true,
+      index: true,
+    },
+    userId: {
+      type: String,
+      default: null,
       index: true,
     },
     config: {
@@ -40,4 +45,4 @@ const interviewSessionSchema = new mongoose.Schema(
   }
 );
 
-module.exports = mongoose.model("InterviewSession", interviewSessionSchema);
+export default mongoose.model("InterviewSession", interviewSessionSchema);
