@@ -41,22 +41,36 @@ export default function SetupForm({ onStart, loading }) {
   const [difficulty, setDifficulty] = useState(DIFFICULTIES[1]);
   const [type, setType] = useState(TYPES[0]);
   const [resume, setResume] = useState("");
+  const [resumeFile, setResumeFile] = useState(null);
 
   function handleSubmit(e) {
     e.preventDefault();
-    onStart({ role, experience, difficulty, type, resume });
+    onStart({ role, experience, difficulty, type, resume, resumeFile });
   }
 
   return (
     <form className="setup-form" onSubmit={handleSubmit}>
       <div className="landing-hero">
-        <div>
-          <h1>InterviewGPT</h1>
-          <p className="subtitle">Configure your mock interview with dynamic AI prompts, voice support, and instant feedback.</p>
+        <div className="hero-copy">
+          <div className="hero-badge">Human-like AI mock interviews</div>
+          <h1>Practice your next interview with calm, realistic guidance.</h1>
+          <p className="subtitle">
+            Choose the role, upload your resume, and step into a polished conversation that feels closer to a real recruiter.
+          </p>
           <div className="feature-chips">
-            <span>AI interviewer</span>
-            <span>Voice-ready answers</span>
-            <span>Config preview</span>
+            <span>Tailored questions</span>
+            <span>Resume-aware follow-ups</span>
+            <span>Instant feedback</span>
+          </div>
+          <div className="hero-stats">
+            <div className="stat-card">
+              <strong>1:1</strong>
+              <span>Realistic interviewer flow</span>
+            </div>
+            <div className="stat-card">
+              <strong>Fast</strong>
+              <span>Start in under 30 seconds</span>
+            </div>
           </div>
         </div>
 
@@ -115,19 +129,33 @@ export default function SetupForm({ onStart, loading }) {
         </label>
       </div>
 
-      <label>
-        Resume (paste text, optional)
-        <textarea
-          rows={5}
-          placeholder="Paste your resume text here so the interviewer can ask about your projects..."
-          value={resume}
-          onChange={(e) => setResume(e.target.value)}
-        />
-      </label>
+      <div className="upload-card">
+        <label className="file-upload">
+          Resume file (PDF or text, optional)
+          <input
+            type="file"
+            accept=".pdf,.txt,.md"
+            onChange={(e) => setResumeFile(e.target.files?.[0] || null)}
+          />
+          <span className="upload-hint">
+            {resumeFile ? `Selected: ${resumeFile.name}` : "Upload a PDF or plain-text resume to personalize the conversation"}
+          </span>
+        </label>
+
+        <label>
+          Resume text (paste here if you prefer)
+          <textarea
+            rows={5}
+            placeholder="Paste your resume text here so the interviewer can ask about your projects..."
+            value={resume}
+            onChange={(e) => setResume(e.target.value)}
+          />
+        </label>
+      </div>
 
       <div className="form-footer">
         <div className="hint-box">
-          <strong>Tip:</strong> Use the preview card to review your interview setup before you start.
+          <strong>Tip:</strong> Add a resume file or paste your background to help the interviewer ask smarter, more relevant questions.
         </div>
         <button type="submit" disabled={loading}>
           {loading ? "Starting..." : "Start Interview"}

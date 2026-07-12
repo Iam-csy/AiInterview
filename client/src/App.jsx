@@ -27,7 +27,8 @@ export default function App() {
       setInitialMessage(message);
       setStage(STAGE.INTERVIEW);
     } catch (err) {
-      setError("Failed to start interview. Please check the server and try again.");
+      const message = err?.response?.data?.error || "Failed to start interview. Please check the server and try again.";
+      setError(message);
     } finally {
       setLoading(false);
     }

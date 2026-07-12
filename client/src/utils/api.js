@@ -8,9 +8,29 @@ const api = axios.create({
   timeout: 120000,
 });
 
-export async function startInterview(config) {
-  const { data } = await api.post("/start", config);
-  return data; // { sessionId, message }
+export async function startInterview(config = {}) {
+  const { resumeFile, ...restConfig } = config;
+
+  if (resumeFile) {
+    const formData = new FormData();
+
+    Object.entries(restConfig).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== "") {
+        formData.append(key, value);
+      }
+    });
+
+    formData.append("resumeFile", resumeFile);
+
+    const { data } = await api.post("/start", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+
+    return data;
+  }
+
+  const { data } = await api.post("/start", restConfig);
+  return data;
 }
 
 export async function sendMessage(sessionId, message) {

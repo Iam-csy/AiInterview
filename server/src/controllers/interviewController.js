@@ -1,19 +1,43 @@
+import * as pdfParseModule from "pdf-parse";
 import { getInterviewerReply } from "../services/claudeService.js";
+
+const pdfParse = pdfParseModule?.default || pdfParseModule;
+
+const extractResumeText = async (file) => {
+  if (!file) {
+    return "";
+  }
+
+  const name = file.originalname?.toLowerCase() || "";
+  const mimeType = file.mimetype || "";
+
+  if (mimeType === "application/pdf" || name.endsWith(".pdf")) {
+    const parsed = await pdfParse(file.buffer);
+    return parsed.text || "";
+  }
+
+  if (mimeType.startsWith("text/") || name.endsWith(".txt") || name.endsWith(".md")) {
+    return file.buffer.toString("utf8");
+  }
+
+  throw new Error("Unsupported resume file type. Please upload a PDF or a text file.");
+};
 
 const startInterview = async (req, res) => {
   try {
     const { role = "", experience = "", difficulty = "", type = "", resume = "" } = req.body || {};
+    const resumeText = req.file ? await extractResumeText(req.file) : typeof resume === "string" ? resume : "";
 
     const reply = await getInterviewerReply({
-      config: { role, experience, difficulty, type, resume },
+      config: { role, experience, difficulty, type, resume: resumeText },
       history: [],
       message: "Please begin the interview with introductions and a warm-up question.",
     });
 
-    res.json({ sessionId: "demo-session", message: reply });
+    res.json({ sessionId: "demo-session", message: reply, resumeText });
   } catch (error) {
     console.error("startInterview error:", error);
-    res.status(500).json({ error: "Failed to start interview." });
+    res.status(500).json({ error: error.message || "Failed to start interview." });
   }
 };
 
