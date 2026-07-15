@@ -1,4 +1,9 @@
 import { ChatOllama } from "@langchain/ollama";
+import {
+  ChatPromptTemplate,
+  HumanMessagePromptTemplate,
+  SystemMessagePromptTemplate,
+} from "@langchain/core/prompts";
 import { SYSTEM_PROMPT, buildContextBlock } from "../prompts/systemPrompt.js";
 
 const MODEL = "llama3.2";
@@ -29,21 +34,16 @@ const buildFallbackReply = (config = {}, message = "") => {
   ].join(" ");
 };
 
-const buildPrompt = ({ config, history = [], message = "" }) => {
+const buildPromptTemplate = ({ config, history = [], message = "" }) => {
   const contextBlock = buildContextBlock(config);
-  const historyText = history
-    .map(({ role, content }) => `${role === "assistant" ? "Assistant" : "Candidate"}: ${content}`)
-    .join("\n");
 
-  return [
-    `System: ${SYSTEM_PROMPT}`,
-    `Context: ${contextBlock}`,
-    "Assistant: Understood. I will conduct the interview accordingly.",
-    historyText,
-    `Candidate: ${message}`,
-  ]
-    .filter(Boolean)
-    .join("\n\n");
+  return ChatPromptTemplate.fromMessages([
+    SystemMessagePromptTemplate.fromTemplate(`${SYSTEM_PROMPT}\n\n${contextBlock}`),
+    ...history.map(({ role, content }) =>
+      role === "assistant" ? ["ai", content] : ["human", content]
+    ),
+    HumanMessagePromptTemplate.fromTemplate("{message}"),
+  ]);
 };
 
 const getInterviewerReply = async ({ config = {}, history = [], message = "" }) => {
@@ -53,7 +53,10 @@ const getInterviewerReply = async ({ config = {}, history = [], message = "" }) 
   }
 
   try {
-    const response = await model.invoke(buildPrompt({ config, history, message }));
+    const promptTemplate = buildPromptTemplate({ config, history, message });
+    const formattedMessages = await promptTemplate.formatMessages({ message });
+
+    const response = await model.invoke(formattedMessages);
     const content = response?.content;
 
     if (typeof content === "string") {
