@@ -1,8 +1,5 @@
-import * as pdfParseModule from "pdf-parse";
 import { getInterviewerReply } from "../services/claudeService.js";
-import InterviewSession from "../models/InterviewSession.js";
-
-const pdfParse = pdfParseModule?.default || pdfParseModule;
+import { createSession, getSession, updateSession } from "../services/sessionStore.js";
 
 const extractResumeText = async (file) => {
   if (!file) {
@@ -12,22 +9,22 @@ const extractResumeText = async (file) => {
   const name = file.originalname?.toLowerCase() || "";
   const mimeType = file.mimetype || "";
 
-  if (mimeType === "application/pdf" || name.endsWith(".pdf")) {
-    const parsed = await pdfParse(file.buffer);
-    return parsed.text || "";
-  }
-
   if (mimeType.startsWith("text/") || name.endsWith(".txt") || name.endsWith(".md")) {
     return file.buffer.toString("utf8");
   }
 
-  throw new Error("Unsupported resume file type. Please upload a PDF or a text file.");
+  if (mimeType === "application/pdf" || name.endsWith(".pdf")) {
+    return "";
+  }
+
+  return "";
 };
 
 const startInterview = async (req, res) => {
   try {
     const { role = "", experience = "", difficulty = "", type = "", resume = "" } = req.body || {};
     const resumeText = req.file ? await extractResumeText(req.file) : typeof resume === "string" ? resume : "";
+    const sessionId = `session-${Date.now()}`;
 
     const reply = await getInterviewerReply({
       config: { role, experience, difficulty, type, resume: resumeText },
@@ -35,15 +32,9 @@ const startInterview = async (req, res) => {
       message: "Please begin the interview with introductions and a warm-up question.",
     });
 
-    const session = await InterviewSession.create({
-      sessionId: `session-${Date.now()}`,
-      userId: req.user?.id || null,
-      config: { role, experience, difficulty, type, resume: resumeText },
-      history: [{ role: "assistant", content: reply }],
-      questionNumber: 1,
-    });
+    createSession(sessionId, { role, experience, difficulty, type, resume: resumeText }, [{ role: "assistant", content: reply }]);
 
-    res.json({ sessionId: session.sessionId, message: reply, resumeText });
+    res.json({ sessionId, message: reply, resumeText });
   } catch (error) {
     console.error("startInterview error:", error);
     res.status(500).json({ error: error.message || "Failed to start interview." });
@@ -58,7 +49,7 @@ const sendMessage = async (req, res) => {
       return res.status(400).json({ error: "Message cannot be empty." });
     }
 
-    const session = await InterviewSession.findOne({ sessionId });
+    const session = getSession(sessionId);
     if (!session) {
       return res.status(404).json({ error: "Interview session not found." });
     }
@@ -69,12 +60,14 @@ const sendMessage = async (req, res) => {
       message,
     });
 
-    session.history.push({ role: "user", content: message });
-    session.history.push({ role: "assistant", content: reply });
-    session.questionNumber = Math.max(session.questionNumber + 1, 1);
-    await session.save();
+    updateSession(sessionId, (current) => {
+      current.history.push({ role: "user", content: message });
+      current.history.push({ role: "assistant", content: reply });
+      current.questionNumber = Math.max(current.questionNumber + 1, 1);
+      return current;
+    });
 
-    res.json({ message: reply, questionNumber: session.questionNumber });
+    res.json({ message: reply, questionNumber: session.questionNumber + 1 });
   } catch (error) {
     console.error("sendMessage error:", error);
     res.status(500).json({ error: "Failed to get interviewer response." });
@@ -84,7 +77,7 @@ const sendMessage = async (req, res) => {
 const endInterview = async (req, res) => {
   try {
     const { sessionId = "" } = req.body || {};
-    const session = await InterviewSession.findOne({ sessionId });
+    const session = getSession(sessionId);
 
     if (!session) {
       return res.status(404).json({ error: "Interview session not found." });
@@ -96,9 +89,11 @@ const endInterview = async (req, res) => {
       message: "Please end the interview now and provide the final overall feedback and recommendation in the required format.",
     });
 
-    session.history.push({ role: "assistant", content: reply });
-    session.questionNumber = Math.max(session.questionNumber + 1, 1);
-    await session.save();
+    updateSession(sessionId, (current) => {
+      current.history.push({ role: "assistant", content: reply });
+      current.questionNumber = Math.max(current.questionNumber + 1, 1);
+      return current;
+    });
 
     res.json({ message: reply });
   } catch (error) {

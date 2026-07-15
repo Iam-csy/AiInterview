@@ -22,12 +22,15 @@ export default function App() {
     setLoading(true);
     setError("");
     try {
-      const { sessionId, message } = await startInterview(config);
-      setSessionId(sessionId);
-      setInitialMessage(message);
+      const response = await startInterview(config);
+      const nextSessionId = response?.sessionId || `session-${Date.now()}`;
+      const nextMessage = response?.message || "Let’s begin the interview.";
+
+      setSessionId(nextSessionId);
+      setInitialMessage(nextMessage);
       setStage(STAGE.INTERVIEW);
     } catch (err) {
-      const message = err?.response?.data?.error || "Failed to start interview. Please check the server and try again.";
+      const message = err?.response?.data?.error || err?.message || "Failed to start interview. Please check the server and try again.";
       setError(message);
     } finally {
       setLoading(false);

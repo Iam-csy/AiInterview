@@ -1,9 +1,19 @@
-import OpenAI from "openai";
+import { ChatOllama } from "@langchain/ollama";
 import { SYSTEM_PROMPT, buildContextBlock } from "../prompts/systemPrompt.js";
 
-const MODEL = process.env.OPENAI_MODEL || "gpt-4.1-mini";
-const apiKey = process.env.OPENAI_API_KEY?.trim();
-const client = apiKey ? new OpenAI({ apiKey }) : null;
+const MODEL = "llama3.2";
+const baseUrl = process.env.OLLAMA_BASE_URL || "http://localhost:11434";
+
+let model = null;
+
+try {
+  model = new ChatOllama({
+    model: MODEL,
+    baseUrl,
+  });
+} catch (error) {
+  console.error("Failed to initialize Ollama model:", error.message);
+}
 
 const buildFallbackReply = (config = {}, message = "") => {
   const role = config?.role || "candidate";
@@ -14,40 +24,49 @@ const buildFallbackReply = (config = {}, message = "") => {
 
   return [
     `Thanks for joining the interview. I’m ready to assess your ${role} background at the ${experience} level.`,
-    "Set OPENAI_API_KEY to enable real OpenAI responses. For now, please share a short introduction and your relevant experience.",
+    "Start Ollama locally and ensure the selected model is available to enable real interview responses. For now, please share a short introduction and your relevant experience.",
     prompt,
   ].join(" ");
 };
 
-const buildMessages = ({ config, history = [], message }) => {
+const buildPrompt = ({ config, history = [], message = "" }) => {
   const contextBlock = buildContextBlock(config);
+  const historyText = history
+    .map(({ role, content }) => `${role === "assistant" ? "Assistant" : "Candidate"}: ${content}`)
+    .join("\n");
 
   return [
-    { role: "system", content: SYSTEM_PROMPT },
-    { role: "user", content: contextBlock },
-    { role: "assistant", content: "Understood. I will conduct the interview accordingly." },
-    ...history,
-    { role: "user", content: message },
-  ];
+    `System: ${SYSTEM_PROMPT}`,
+    `Context: ${contextBlock}`,
+    "Assistant: Understood. I will conduct the interview accordingly.",
+    historyText,
+    `Candidate: ${message}`,
+  ]
+    .filter(Boolean)
+    .join("\n\n");
 };
 
 const getInterviewerReply = async ({ config = {}, history = [], message = "" }) => {
-  if (!client) {
-    console.warn("OpenAI credentials not configured. Using fallback interview reply.");
+  if (!model) {
+    console.warn("Ollama model not available. Using fallback interview reply.");
     return buildFallbackReply(config, message);
   }
 
   try {
-    const response = await client.chat.completions.create({
-      model: MODEL,
-      max_tokens: 1024,
-      messages: buildMessages({ config, history, message }),
-    });
+    const response = await model.invoke(buildPrompt({ config, history, message }));
+    const content = response?.content;
 
-    const content = response.choices?.[0]?.message?.content;
-    return typeof content === "string" ? content : "";
+    if (typeof content === "string") {
+      return content.trim();
+    }
+
+    if (Array.isArray(content)) {
+      return content.map((item) => item?.text || "").filter(Boolean).join("\n");
+    }
+
+    return "";
   } catch (error) {
-    console.error("OpenAI request failed, using fallback reply:", error.message);
+    console.error("Ollama request failed, using fallback reply:", error.message);
     return buildFallbackReply(config, message);
   }
 };

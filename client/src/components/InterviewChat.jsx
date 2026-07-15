@@ -16,17 +16,22 @@ export default function InterviewChat({ sessionId, initialMessage, onEnd }) {
   }, [messages, loading]);
 
   useEffect(() => {
+    if (typeof window === "undefined" || !window.speechSynthesis) return;
+
+    if (!voiceEnabled) {
+      window.speechSynthesis.cancel();
+      return;
+    }
+
     const latestMessage = messages[messages.length - 1];
     if (!latestMessage || latestMessage.role !== "assistant") return;
 
-    if (typeof window !== "undefined" && window.speechSynthesis && voiceEnabled) {
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(latestMessage.content);
-      utterance.lang = "en-US";
-      utterance.rate = 1;
-      utterance.pitch = 1;
-      window.speechSynthesis.speak(utterance);
-    }
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(latestMessage.content);
+    utterance.lang = "en-US";
+    utterance.rate = 1;
+    utterance.pitch = 1;
+    window.speechSynthesis.speak(utterance);
   }, [messages, voiceEnabled]);
 
   const appendMessage = (role, content) => {
@@ -51,13 +56,23 @@ export default function InterviewChat({ sessionId, initialMessage, onEnd }) {
   }
 
   async function handleEndInterview() {
+    if (!sessionId) {
+      onEnd("Interview ended.");
+      return;
+    }
+
     setEnding(true);
+    if (typeof window !== "undefined" && window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+    }
 
     try {
       const { message } = await endInterview(sessionId);
+      appendMessage("assistant", message);
       onEnd(message);
     } catch (error) {
       appendMessage("assistant", "Couldn't generate final feedback. Please try again.");
+      onEnd("Couldn't generate final feedback. Please try again.");
     } finally {
       setEnding(false);
     }
